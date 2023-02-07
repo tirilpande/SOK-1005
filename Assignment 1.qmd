@@ -1,0 +1,58 @@
+---
+title: "Assignment 1"
+format: pdf
+editor: visual
+---
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(readr)
+```
+
+```{r}
+#Making the different dataframe
+Lower.t <- read_table("http://vortex.nsstc.uah.edu/data/msu/v6.0/tlt/uahncdc_lt_6.0.txt")
+Mid.t <- read_table("http://vortex.nsstc.uah.edu/data/msu/v6.0/tmt/uahncdc_mt_6.0.txt")
+Tropopause <- read_table("http://vortex.nsstc.uah.edu/data/msu/v6.0/ttp/uahncdc_tp_6.0.txt")
+Lower.s <- read_table("http://vortex.nsstc.uah.edu/data/msu/v6.0/tls/uahncdc_ls_6.0.txt")
+```
+
+```{r}
+#Making the 12 month
+Lower.s <- Lower.s %>% filter(Mo == 12)
+Lower.t <- Lower.t %>% filter(Mo == 12)
+Mid.t <- Mid.t %>% filter(Mo == 12)
+Tropopause <- Tropopause %>% filter(Mo == 12)
+```
+
+```{r}
+#Making the dataframe numeric for easier to work with
+Lower.s <- mutate_all(Lower.s, function(x) as.numeric(as.character(x)))
+Lower.t <- mutate_all(Lower.t, function(x) as.numeric(as.character(x)))
+Mid.t <- mutate_all(Mid.t, function(x) as.numeric(as.character(x)))
+Tropopause <- mutate_all(Tropopause, function(x) as.numeric(as.character(x)))
+
+#To making an average for each dataframe
+Lower.s$average <- rowMeans(Lower.s[ ,3:26], na.rm=TRUE)
+Lower.t$average <- rowMeans(Lower.t[ ,3:26], na.rm=TRUE)
+Mid.t$average <- rowMeans(Mid.t[ ,3:26], na.rm=TRUE)
+Tropopause$average <- rowMeans(Tropopause[ ,3:26], na.rm=TRUE)
+
+#Plotting the average of all values
+Average <- (Lower.s$average + Lower.t$average + Mid.t$average + Tropopause$average) / 4
+```
+
+```{r}
+#Plotting all the average
+Lower.s %>%
+  ggplot(aes(x=Year, y=average, color = "Lower stratosphere"))+ geom_line(color="blue") +
+  geom_line(aes(x=Year, y=Lower.t$average, color = "Lower troposphere"), color = "red") +
+  geom_line(aes(x=Year, y=Mid.t$average, color = "Mid troposphere"), col="orange") +
+  geom_line(aes(x=Year, y=Tropopause$average, color = "Tropospause"), col="yellow") +
+  geom_line(aes(x=Year, y=Average, color = "Average"), col="green") +
+  ggtitle("Plot of temperature over time") +
+  ylab("Global temperature") +
+  xlab("Time") +
+  theme_minimal()
+```
