@@ -1,0 +1,38 @@
+---
+title: "Task 1"
+format: html
+editor: visual
+---
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(rvest)  # for web scraping 
+library(purrr)
+```
+
+```{r}
+# URl of the data 
+url <- "https://fred.stlouisfed.org/series/DCOILBRENTEU#0"
+
+url %>% read_html() %>% 
+  html_element("table") %>%  
+  html_table() %>% head(50)
+```
+
+```{r}
+ table <- url %>%
+   read_html() %>% 
+   html_nodes("table") %>%  
+   html_table() %>% .[[1]] %>% head(50)
+ 
+ names(table) <- c("Date", "Value","Value 2")
+ 
+  head(table,40)
+```
+
+```{r}
+table %>%
+  ggplot(aes(x= Date, fct_reorder(Value, Date))) +
+  geom_point()
+```
