@@ -1,0 +1,84 @@
+---
+title: "Assignment 2"
+format: html
+editor: visual
+---
+
+```{r}
+rm (list = ls())
+library(tidyverse)
+library(rvest)  # for web scraping 
+library(purrr)
+```
+
+# Task 1
+
+```{r}
+#Download data
+url <- "https://www.motor.no/aktuelt/motors-store-vintertest-av-rekkevidde-pa-elbiler/217132"
+
+url %>% read_html() %>% 
+  html_element("table") %>%  
+  html_table() %>% head(35)
+```
+
+```{r}
+#Transform from URL to dataframe
+ df <- url %>%
+   read_html() %>% 
+   html_nodes("table") %>%  
+   html_table() %>% .[[1]]
+ #Giving each column a title
+ names(df) <- c("Modell (temp. varierte fra 0° til -10°)", "WLTP-tall", "STOPP", "Avvik")
+ 
+ head(df,35)
+ 
+#Remove the first row
+ df = df[-1,]
+```
+
+```{r}
+#Duplicate the columns so it will be easier to work with
+df <- separate(df, col=`WLTP-tall`, into=c('WLTP-tall', 'NaN'), sep=' ')
+df <- separate(df, col=`STOPP`, into=c('STOPP', 'Remove'), sep=' ')
+
+df <- df[,-3]
+df <- df[,-4]
+
+df$`WLTP-tall` <- as.numeric(df$`WLTP-tall`)
+df$STOPP <- as.numeric(df$STOPP)
+```
+
+```{r}
+#Plot in the graph
+df %>%
+  ggplot(aes(x= `WLTP-tall` , y = STOPP)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, size = 0.5, col = 'red') +
+  xlab('WLTP') +
+  ylab('STOP') +
+  ggtitle('Motor’s Range test') +
+  theme_minimal()
+```
+
+# Task 2
+
+```{r}
+#Making the actual mileage
+df[is.na(df) | df=="x"] = NA
+
+df_2 <- lm(`STOPP` ~ `WLTP-tall`, data = df)
+```
+
+```{r}
+#plot the actual mileage
+df %>%
+  ggplot(aes(x = `WLTP-tall`, y = STOPP)) + 
+  geom_point()+
+  geom_abline(intercept = 0, slope = 1, size = 0.5, col = 'red') +
+  stat_smooth(method = "lm", col = "blue") +
+  xlab('WLTP') +
+  ylab('STOP') +
+  ggtitle('Motor’s Range test') +
+  theme_minimal()
+```
